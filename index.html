@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard & Report Archives</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- 기본 및 레이아웃 --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Lora', 'Noto Sans KR', serif;
+            background-color: #1a1a1a;
+            color: #f0e6d2;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem 1rem;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -10px; left: -10px; right: -10px; bottom: -10px;
+            background-image: url('https://i.imgur.com/gjeKFsX.jpeg');
+            background-size: cover;
+            background-position: center;
+            filter: blur(8px);
+            z-index: -2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 5, 0, 0.65);
+            z-index: -1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+        }
+
+        header h1 {
+            font-size: 1.75rem; 
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 0.7rem;
+            opacity: 0.9;
+            margin-top: 0.35rem;
+        }
+
+        main {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* --- 네비게이션 버튼 그룹 --- */
+        .header-nav-group {
+            margin-top: 1.4rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-button {
+            display: inline-block;
+            padding: 0.42rem 1.26rem;
+            font-family: 'Lora', 'Noto Sans KR', serif;
+            font-size: 0.63rem;
+            font-weight: 700;
+            color: #f0e6d2;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(240, 230, 210, 0.4);
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(240, 230, 210, 0.7);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .nav-button.active {
+            background: rgba(240, 230, 210, 0.25);
+            border-color: rgba(240, 230, 210, 0.8);
+            cursor: default;
+        }
+
+        .nav-button.active:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* --- 카테고리 필터 스타일 --- */
+        .category-filters {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .filter-button {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.65rem; 
+            font-weight: 500; 
+            color: #d1c9bd;
+            background-color: transparent;
+            border: 1px solid rgba(240, 230, 210, 0.3);
+            padding: 0.4rem 1.1rem; 
+            border-radius: 6px; 
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(240, 230, 210, 0.7);
+            color: #f0e6d2;
+        }
+
+        .filter-button.active {
+            background-color: rgba(240, 230, 210, 0.85);
+            border-color: rgba(240, 230, 210, 0.9);
+            color: #3d2b1f;
+            font-weight: 700; 
+            cursor: default;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        /* --- 아카이브 리스트 --- */
+        #archive-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .archive-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(240, 230, 210, 0.2);
+            border-radius: 8px;
+            transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease, opacity 0.5s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            cursor: pointer; 
+        }
+
+        .archive-item.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .archive-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(240, 230, 210, 0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .item-content h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .metadata {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .category-tag {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            background: rgba(130, 180, 255, 0.1);
+            border: 1px solid rgba(130, 180, 255, 0.3);
+            border-radius: 4px;
+            color: #d1e3ff;
+        }
+
+        .lang-links {
+            display: flex;
+            gap: 0.7rem;
+            margin-left: 1rem;
+            flex-shrink: 0;
+        }
+
+        .lang-link-button {
+            text-decoration: none;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #f0e6d2;
+            padding: 0.4rem 0.9rem;
+            border: 1px solid rgba(240, 230, 210, 0.5);
+            border-radius: 20px;
+            background-color: transparent;
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+
+        .archive-item:hover .lang-link-button {
+            background-color: rgba(240, 230, 210, 0.2);
+            border-color: rgba(240, 230, 210, 0.8);
+        }
+
+
+        /* --- 모달 창 스타일 --- */
+        .modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(10, 5, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-container.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: #2c251e;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid rgba(240, 230, 210, 0.4);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+            /* ★★★★★ Flexbox layout for vertical spacing ★★★★★ */
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh; /* Prevent modal from being too tall on small screens */
+        }
+
+        .modal-container.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: #f0e6d2;
+            opacity: 0.7;
+            cursor: pointer;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .modal-close-button:hover {
+            opacity: 1;
+            transform: rotate(90deg);
+        }
+
+        .modal-content h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+            flex-shrink: 0; /* Prevent title from shrinking */
+        }
+
+        .modal-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 1.5rem;
+            flex-shrink: 0; /* Prevent subtitle from shrinking */
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        /* ★★★★★ New Style for Multi-Link List ★★★★★ */
+        .modal-buttons.multi-link-list {
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 0 10px 5px 0; /* Add padding for scrollbar and some bottom space */
+            flex-grow: 1; /* Allow this container to grow and fill available space */
+            min-height: 0; /* Crucial for making flex-grow work with overflow */
+        }
+
+        .modal-buttons.multi-link-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-buttons.multi-link-list::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+        .modal-buttons.multi-link-list::-webkit-scrollbar-thumb {
+            background: rgba(240, 230, 210, 0.5);
+            border-radius: 3px;
+        }
+        .modal-buttons.multi-link-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(240, 230, 210, 0.7);
+        }
+
+        .modal-lang-button {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #3d2b1f;
+            text-decoration: none;
+            background-color: rgba(240, 230, 210, 0.85);
+            border: 1px solid rgba(240, 230, 210, 0.9);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-lang-button:hover {
+            background-color: rgba(240, 230, 210, 1);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        /* --- 모바일 반응형 --- */
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.5rem; }
+            .item-content h2 { font-size: 1.1rem; }
+            
+            .archive-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 1.2rem 1.5rem;
+                gap: 1rem; 
+            }
+            
+            .lang-links {
+                margin-left: 0;
+                align-self: flex-end;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Dashboard & Report Archives</h1>
+        <p>A collection of my analytical dashboards and reports.</p>
+        
+        <div class="header-nav-group">
+            <a href="#" class="nav-button active">Archives</a>
+            <a href="https://codepen.io/Kipeum-Lee/full/qEdJJXa" target="_blank" class="nav-button">Book Summaries</a>
+            <a href="https://codepen.io/Kipeum-Lee/full/azNXLYo" target="_blank" class="nav-button">2025 Reading List</a>
+        </div>
+    </header>
+
+    <div id="category-filter-container" class="category-filters">
+        </div>
+
+    <main>
+        <div id="archive-list-container">
+            </div>
+    </main>
+
+    <div id="modal-container" class="modal-container">
+        <div class="modal-content">
+            <button id="modal-close-button" class="modal-close-button">×</button>
+            <h3 id="modal-title"></h3>
+            <p class="modal-subtitle">언어를 선택하세요 / Select Language</p>
+            <div id="modal-buttons" class="modal-buttons">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Dashboard Data
+            const dashboardData = [
+                // ★★★★★ New Dashboard Item Added ★★★★★
+             {
+                    title: "올해와 내년에도 반복될 키워드 “타코”, 엔화 약세가 원화 안정의 조건? - 오건영 단장",
+                    date: "2025. 12. 9.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/WbwLggO"
+                    }
+                },      
+              {
+                    title: "현대차 v. 테슬라 (이재용 회계사)",
+                    date: "2025. 12. 5.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/azNReKe"
+                    }
+                },      
+              {
+                    title: "코스피 3500 가능합니다 현금 더 늘리세요 (김영익 소장)",
+                    date: "2025. 11. 25",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/myPXezQ"
+                    }
+                },      
+              {
+                    title: "AI 시대, 한국 교육이 나아가야 할 생존 전략 (조벽 교수)",
+                    date: "2025. 11. 19",
+                    category: "AI",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/raewjEg"
+                    }
+                },      
+              {
+                    title: "AFW파트너스 이선엽 대표: 버블 붕괴 아니다",
+                    date: "2025. 11. 17",
+                    category: "Investment, AI",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/OPNpyNx"
+                    }
+                },      
+              {
+                    title: "2026 정부 예산안 기반 정책 수혜주 분석",
+                    date: "2025. 11. 14",
+                    category: "Investment, AI",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/KwzVbXG"
+                    }
+                },      
+              {
+                    title: "2025. 11. 5. 한국 주식시장 급락 원인 분석",
+                    date: "2025. 11. 5.",
+                    category: "Investment, AI",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/ogbRJYv"
+                    }
+                },      
+              {
+                    title: "2025년 11월 현재 주식 시장 및 AI 산업 거품론 심층 분석 보고서)",
+                    date: "2025. 11. 3.",
+                    category: "Investment, AI",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/jEWXxMg"
+                    }
+                },      
+              {
+                    title: "언더스탠딩: 엔비디아는 결국 이 회사를 살 겁니다 (KAIST 김정호 교수)",
+                    date: "2025. 10. 31.",
+                    category: "Investment, AI",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/MYKqNEv"
+                    }
+                },    
+              {
+                    title: "HTML Dashboards by 동서학 개미 나침반 (GenSpark)",
+                    date: "2025. 10. 17.",
+                    category: "Investment, AI",
+                    type: 'multi-link', // Custom type for special handling
+                    links: {
+                        "LG에너지솔루션": "https://codepen.io/Kipeum-Lee/full/ByjmKjz",
+                        "Microsoft": "https://codepen.io/Kipeum-Lee/full/xbZPVgM",
+                        "Quantum-Si, Inc.": "https://codepen.io/Kipeum-Lee/full/ZYQaWvM",
+                        "쿠팡": "https://codepen.io/Kipeum-Lee/full/WbrXwLM",
+                        "Nvidia": "https://codepen.io/Kipeum-Lee/full/ZYQaXKo",
+                        "AMD": "https://codepen.io/Kipeum-Lee/full/JoGMjGj",
+                        "Oracle": "https://codepen.io/Kipeum-Lee/full/MYKrWPN",
+                        "Amazon": "https://codepen.io/Kipeum-Lee/full/XJXVJqR",
+                        "Meta": "https://codepen.io/Kipeum-Lee/full/gbPobJV",
+                        "Robinhood": "https://codepen.io/Kipeum-Lee/full/azdqZYo",
+                        "솔트룩스": "https://codepen.io/Kipeum-Lee/full/raxJYEX"
+                    }
+                },
+                {
+                    title: "동서학 개미 나침반 (GenSpark Custom Agent: 기업/주식 분석)",
+                    date: "2025. 10. 16.",
+                    category: "Investment, AI",
+                    links: { 
+                        kor: "https://www.genspark.ai/agents?type=custom_super_agent&agent_id=2d875cf9-08a1-4aa9-8568-5528ab638742",
+                        eng: "https://www.genspark.ai/agents?type=custom_super_agent&agent_id=afb05175-be1f-409c-906f-a0e621f40979"
+                    }
+                }, 
+                {
+                    title: "AppLovin (APP) Stock Price Outlook (2025. 10. 8)",
+                    date: "2025. 10. 8.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/RNrVoBJ"
+                    }
+                },  
+                {
+                    title: "KP's AI Photo Studio (App)",
+                    date: "2025. 9. 25.",
+                    category: "AI",
+                    links: { 
+                        Lifestyle: "https://kp-s-ai-photo-studio-lifestyle-sports-824825595989.us-west1.run.app/",
+                        Culture: "https://kp-s-ai-photo-studio-culture-arts-824825595989.us-west1.run.app/"
+                    }
+                },  
+                {
+                    title: "Roblox (RBLX) Stock Price Outlook (2025. 9. 20.)",
+                    date: "2025. 9. 20.",
+                    category: "Investment, Game Industry",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/XJXJbep",
+                        eng: "https://codepen.io/Kipeum-Lee/full/bNENVpp"
+                    }
+                }, 
+                // ... The rest of your data ...
+                {
+                    title: "Alphabet (Google) Stock Price Outlook (2025. 9. 19.)",
+                    date: "2025. 9. 19.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/emJYrqp",
+                        eng: "https://codepen.io/Kipeum-Lee/full/VYeYLRE"
+                    }
+                },
+                {
+                    title: "레티널(LetinAR): 심층 투자 분석 및 밸류에이션 리포트",
+                    date: "2025. 9. 18.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/LEGPKPq"
+                    }
+                },
+                {
+                    title: "Thomson Reuters v. Ross Intelligence (미국 판례 분석)",
+                    date: "2025. 9. 16.",
+                    category: "Law, AI",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/raOXqKv"
+                    }
+                },
+                {
+                    title: "코리아 디스카운트 제11화 (천준범 변호사 / 언더스탠딩)",
+                    date: "2025. 9. 15.",
+                    category: "Law, Politics, Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/XJmvbaY"
+                    }
+                },
+                {
+                    title: "이스라엘의 카타르 공습 분석 보고서",
+                    date: "2025. 9. 12.",
+                    category: "Politics",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/qEOGgVe"
+                    }
+                },
+                {
+                    title: "美, 현대차-LG엔솔 공장 한국인 직원 체포",
+                    date: "2025. 9. 8.",
+                    category: "Politics, Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/JoYzOBL"
+                    }
+                },
+                {
+                    title: "AI 주식 시장, 버블은 터질것인가? (The Economist)",
+                    date: "2025. 9. 8.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/qEOvXwB"
+                    }
+                },
+                {
+                    title: "엉망진창 자사주, 무엇이 문제인가? (코리아디스카운트 9-10화 - 천준범)",
+                    date: "2025. 8. 29.",
+                    category: "Politics, Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/ZYbMPjP"
+                    }
+                },
+                {
+                    title: "트럼프와 파월, 미국 경제의 향방은? (오건영)",
+                    date: "2025. 8. 26.",
+                    category: "Politics, Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/bNVjVbL"
+                    }
+                },
+                {
+                    title: "LG에너지솔루션 주가 전망",
+                    date: "2025. 8. 21.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/MYaGebw"
+                    }
+                },
+                {
+                    title: "Alphabet (Google) Price Outlook (주가전망)",
+                    date: "2025. 8. 21.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/KwdRVMa",
+                        eng: "https://codepen.io/Kipeum-Lee/full/emprJze"
+                    }
+                },
+                {
+                    title: "펩트론 주가 전망",
+                    date: "2025. 8. 21.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/YPyLXWW"
+                    }
+                },
+                {
+                    title: "펄어비스 주가 전망",
+                    date: "2025. 8. 21.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/zxvjOrQ"
+                    }
+                },
+                {
+                    title: "한화오션 주가 전망",
+                    date: "2025. 8. 21.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/KwdRwxy"
+                    }
+                },
+                {
+                    title: "SK하이닉스 단기 주가 전망",
+                    date: "2025. 8. 21.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/gbaeNLB"
+                    }
+                },
+                {
+                    title: "The Only Trait for Success in the AI Era—How to Build It",
+                    date: "2025. 8. 20.",
+                    category: "AI",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/bNVvryY",
+                        eng: "https://codepen.io/Kipeum-Lee/full/raOdzgP"
+                    }
+                },
+                {
+                    title: "인공지능 시대에 필요한 교육, 그시절 밥상교육이 옳았습니다 (손에잡히는경제)",
+                    date: "2025. 8. 14.",
+                    category: "AI, Etc.",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/EaVbrzo"
+                    }
+                },
+                {
+                    title: "금리 하락 승부수, 베센트의 도박 성공할까? (박종훈의 지식한방)",
+                    date: "2025. 8. 11.",
+                    category: "Investment, Etc.",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/wBKrWod"
+                    }
+                },
+                {
+                    title: "우체국 실손보험 분석",
+                    date: "2025. 8. 11.",
+                    category: "Investment, Etc.",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/ogjGxEQ"
+                    }
+                },
+                {
+                    title: "진보적이던 교회가 어쩌다 이렇게나 보수화됐을까 (삼프로TV)",
+                    date: "2025. 8. 5.",
+                    category: "Politics, Etc.",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/NPGjXRW"
+                    }
+                },
+                {
+                    title: "KP's LLM Guide for Lawyers",
+                    date: "2025. 8. 4.",
+                    category: "Law",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/XJmRWRX",
+                        eng: "https://codepen.io/Kipeum-Lee/full/yyYXaGM"
+                    }
+                },
+                {
+                    title: "개인정보보호법 과징금·과태료 완전 분석 보고서",
+                    date: "2025. 7. 30.",
+                    category: "Law",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/empBoNM"
+                    }
+                },
+                {
+                    title: "윌라 v. 밀리의서재 TTS 소송 분석 (TTS Functionality and Copyright)",
+                    date: "2025. 7. 26.",
+                    category: "Law, AI",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/JoYROZw",
+                        eng: "https://codepen.io/Kipeum-Lee/full/EaVgrBv"
+                    }
+                },
+                {
+                    title: "이스라엘의 시리아 공습 분석 (Israel's Airstrikes on Syria)",
+                    date: "2025. 7. 20.",
+                    category: "Politics",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/PwPZNBN",
+                        eng: "https://codepen.io/Kipeum-Lee/full/zxvrqjL"
+                    }
+                },
+                {
+                    title: "스테이블 코인, 전 세계 금융시장 삼킬 태풍이 온다 (Stablecoins: A looming typhoon poised to engulf the global financial market)",
+                    date: "2025. 7. 12.",
+                    category: "Politics, Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/jEbEPwp",
+                        eng: "https://codepen.io/Kipeum-Lee/full/jEbErrj"
+                    }
+                },
+                {
+                    title: "EU Battery Regulation (종합 분석) Analysis Report ",
+                    date: "2025. 7. 9.",
+                    category: "Law, Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/LEpPBwq",
+                        eng: "https://codepen.io/Kipeum-Lee/full/empOLrQ"
+                    }
+                },
+                {
+                    title: "An Explanation of In-context Learning as Implicit Bayesian Inference",
+                    date: "2025. 7. 7.",
+                    category: "AI, Science",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/emNqWwv",
+                        eng: "https://codepen.io/Kipeum-Lee/full/MYwNmMb"
+                    }
+                },
+                {
+                    title: "이스라엘-이란 전쟁 분석 (Reports on Israe-Iran Conflict) #4",
+                    date: "2025. 6. 30.",
+                    category: "Politics",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/azOxvaO",
+                        eng: "https://codepen.io/Kipeum-Lee/full/GgJLpzO"
+                    }
+                },
+                {
+                    title: "파격적 공약으로 뉴욕을 뒤흔든 맘다니 열풍 (슈카월드)",
+                    date: "2025. 7. 7.",
+                    category: "Politics",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/XJbvZMd"
+                    }
+                },
+                {
+                    title: "부동산은 재테크 아닙니다 남의 돈 뺏는 겁니다 (김태유 교수)",
+                    date: "2025. 7. 11.",
+                    category: "Politics, Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/ogjNmwx"
+                    }
+                },
+                {
+                    title: "K-배터리, 한숨부터 나옵니다 (이재용 회계사)",
+                    date: "2025. 7. 10.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/raONyxJ"
+                    }
+                },
+                {
+                    title: "트럼프 정부의 관세 정책과 미국의 달러 패권 (박종훈)",
+                    date: "2025. 7. 21.",
+                    category: "Politics, Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/pvjgXBq"
+                    }
+                },
+                {
+                    title: "미국 제조업 부활 전략 심층 분석 (박종훈)",
+                    date: "2025. 7. 23.",
+                    category: "Politics, Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/GgpZLvy"
+                    }
+                },
+                {
+                    title: "출판/미디어 산업의 미래: NYT, Anthropic, Meta 소송 분석 (박성필 교수)",
+                    date: "2025. 7. 15.",
+                    category: "Law, AI",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/ogjXBJo"
+                    }
+                },
+                {
+                    title: "Wolfire Games, et al. v. Valve Corp. 사건 요약",
+                    date: "2025. 7. 9.",
+                    category: "Law, Game Industry",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/RNWbJWV"
+                    }
+                },
+                {
+                    title: "마침내 바뀐 상법 또 빠져나갈 겁니다 (천준범 변호사)",
+                    date: "2025. 7. 9.",
+                    category: "Law, Politics, Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/QwjLrBQ"
+                    }
+                },
+                {
+                    title: "글로벌 금융 시장 심층 분석 (2025년 6-7월)",
+                    date: "2025. 7. 7.",
+                    category: "Investment",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/PwqMRXZ"
+                    }
+                },
+                {
+                    title: "Meta 광고 라이브러리를 활용한 영국·한국의 확률형 아이템 미고지 광고 현황 연구",
+                    date: "2025. 6. 30.",
+                    category: "Law, Game Industry",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/QwbPjxV"
+                    }
+                },
+                {
+                    title: "2025년 상법 개정안 요약 대시보드",
+                    date: "2025. 7. 4.",
+                    category: "Law, Politics",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/raVEzmE"
+                    }
+                },
+                {
+                    title: "연방대법원 24-25년 주요 판례 분석 (SCOTUS 24-25 Term Analysis) ",
+                    date: "2025. 7. 2.",
+                    category: "Law, Politics",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/Eajzgoy",
+                        eng: "https://codepen.io/Kipeum-Lee/full/JodqRME"
+                    }
+                },
+                {
+                    title: "생성형 인공지능 결과물에 의한 저작권 분쟁 예방 안내서",
+                    date: "2025. 7. 1.",
+                    category: "Law, AI",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/NPqmLbe"
+                    }
+                },
+                {
+                    title: "경기는 역대급 최악인데, 집값만 급등하는 진짜 이유 (박종훈의 지식한방)",
+                    date: "2025. 6. 30.",
+                    category: "Investment",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/QwboRrg" }
+                },
+                {
+                    title: "부동산 vs. 달러 어느 쪽이 정답일까? (박종훈의 지식한방)",
+                    date: "2025. 6. 30.",
+                    category: "Investment",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/myJoZXw" }
+                },
+                {
+                    title: "6.27 부동산 대출 규제 총정리",
+                    date: "2025. 6. 27.",
+                    category: "Investment",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/XJbGmOX" }
+                },
+                {
+                    title: "[Case Summary] Bartz et al. v. Anthropic PBC",
+                    date: "2025. 6. 26.",
+                    category: "Law, AI",
+                    links: { 
+                        kor: "https://codepen.io/Kipeum-Lee/full/xbGMKMb",
+                        eng: "https://codepen.io/Kipeum-Lee/full/qEdgWgO"
+                    }
+                },
+                {
+                    title: "글로벌 게임산업 트렌드 (2025년 5+6월호)",
+                    date: "2025. 6. 24.",
+                    category: "Game Industry",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/ZYGVGQq" }
+                },
+                {
+                    title: "Investment Guru Tracker",
+                    date: "2025. 6. 5.",
+                    category: "Investment",
+                    links: { eng: "https://www.perplexity.ai/apps/248c5114-0f82-4278-bbf0-281a0aa4b696" }
+                },
+                {
+                    title: "이재명 신임 정부 출범 대응 전략",
+                    date: "2025. 6. 25.",
+                    category: "Politics, Game Industry",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/OPVrdeQ" }
+                },
+                {
+                    title: "[YouTube 요약] 7세 전 선행학습이 뇌를 망가뜨리는 이유",
+                    date: "2025. 6. 10.",
+                    category: "Etc., Science",
+                    links: { kor: "https://pxuxbwkn.gensparkspace.com/" }
+                },
+                {
+                    title: "미국 연방 소송 절차 분석 (캘리 vs. 트럼프)",
+                    date: "2025. 6. 13.",
+                    category: "Law, Politics",
+                    links: { kor: "https://uuntldws.gensparkspace.com/" }
+                },
+                {
+                    title: "Wall Street Star Analysts Dashboard",
+                    date: "2025. 6. 5.",
+                    category: "Investment",
+                    links: { eng: "https://www.perplexity.ai/apps/32f89a82-390d-422a-937a-2a94de101c13" }
+                },
+                {
+                    title: "한국 게임산업 법률/정책 모니터링 대시보드",
+                    date: "2025. 6. 4.",
+                    category: "Law, Game Industry",
+                    links: { kor: "https://www.perplexity.ai/apps/5e5a4da6-e5f2-40db-95ae-2b91c811ebee" }
+                },
+                {
+                    title: "과천 신혼부부 청약 완벽 가이드",
+                    date: "2025. 6. 5.",
+                    category: "Investment, Etc.",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/gbpmmeB" }
+                },
+                {
+                    title: "오키나와 가족여행 플래너",
+                    date: "2025. 6. 4.",
+                    category: "Etc.",
+                    links: { kor: "https://ppl-ai-code-interpreter-files.s3.amazonaws.com/web/direct-files/f7af2d682c86b74358efbacbe67c5978/de993d8d-3408-436f-93a5-b31e352ce3b0/index.html" }
+                },
+                {
+                    title: "유럽 경제 위기 분석 대쉬보드",
+                    date: "2025. 6. 1.",
+                    category: "Investment",
+                    links: { kor: "https://www.perplexity.ai/apps/bf6166f8-959e-4315-a9b4-46bc4f86509a" }
+                },
+                {
+                    title: "S&P 500 2025년 하반기 전망 대시보드",
+                    date: "2025. 5. 30.",
+                    category: "Investment",
+                    links: { kor: "https://www.perplexity.ai/apps/9031ae41-02a9-43c0-9660-beb16b92b3fe" }
+                },
+                {
+                    title: "KOSPI 2025년 하반기 전망 분석",
+                    date: "2025. 5. 30.",
+                    category: "Investment",
+                    links: { kor: "https://www.perplexity.ai/apps/92fae799-27a4-4761-aed1-ad0cdddd6306" }
+                },
+                {
+                    title: "2025 대선 결과 예측 대시보드 #2",
+                    date: "2025. 5. 30.",
+                    category: "Politics",
+                    links: { kor: "https://www.perplexity.ai/apps/d9b14f9a-e07f-43eb-afce-d6a42a6e3e37" }
+                },
+                {
+                    title: "2025 대선 결과 예측 대시보드 #1",
+                    date: "2025. 5. 30.",
+                    category: "Politics",
+                    links: { kor: "https://www.perplexity.ai/apps/d17442b6-5d9b-406b-b41d-3664c9a496ce" }
+                },
+                {
+                    title: "한국 AI 기본법과 EU AI Act 비교 분석",
+                    date: "2025. 5. 30.",
+                    category: "AI, Law",
+                    links: { kor: "https://www.perplexity.ai/apps/218ecee7-5895-465b-a12e-6e8afd20d277" }
+                },
+                {
+                    title: "AI Legal Document Automation Tools",
+                    date: "2025. 5. 30.",
+                    category: "AI, Law",
+                    links: { eng: "https://www.perplexity.ai/apps/a9f96e78-5698-42c3-8476-8fb6a73a8b43" }
+                },
+                {
+                    title: "LA 이민자 단속 반대시위 종합 분석",
+                    date: "2025. 6. 12.",
+                    category: "Politics",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/yyNvVwQ" }
+                },
+                {
+                    title: "이스라엘-이란 전쟁 분석 (Reports on Israel-Iran Conflict) #3",
+                    date: "2025. 6. 23.",
+                    category: "Politics",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/NPqEMwd", eng: "https://codepen.io/Kipeum-Lee/full/WbvYJdj" }
+                },
+                {
+                    title: "미국 GENIUS Act (스테이블 코인법) 분석",
+                    date: "2025. 6. 20.",
+                    category: "Law",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/RNPeVyQ" }
+                },
+                {
+                    title: "Summary of \"Your Brain on ChatGPT\" by MIT Media Lab",
+                    date: "2025. 6. 19.",
+                    category: "Science, AI",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/XJbPOOp", eng: "https://codepen.io/Kipeum-Lee/full/ByNOEPm" }
+                },
+                {
+                    title: "Trends: AI (A report by Mary Meeker)",
+                    date: "2025. 6. 18.",
+                    category: "AI",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/emNLggG", eng: "https://codepen.io/Kipeum-Lee/full/emNLgMV" }
+                },
+                {
+                    title: "Interactive Entertainment: Quarterly Legal Updates",
+                    date: "2025. 6. 18.",
+                    category: "Law",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/MYwqmgM" }
+                },
+                {
+                    title: "이재명 정부 정책 수혜주 발굴 프로젝트",
+                    date: "2025. 6. 18.",
+                    category: "Investment",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/RNPBzdW" }
+                },
+                {
+                    title: "이스라엘-이란 전쟁 분석 (Reports on Israel-Iran Conflict) #2",
+                    date: "2025. 6. 16.",
+                    category: "Politics",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/YPXjzZK", eng: "https://codepen.io/Kipeum-Lee/full/zxGLYPM" }
+                },
+                {
+                    title: "이스라엘-이란 전쟁 분석 (Reports on Israel-Iran Conflict) #1",
+                    date: "2025. 6. 13.",
+                    category: "Politics",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/myJLoEP", eng: "https://codepen.io/Kipeum-Lee/full/vEOjboY" }
+                },
+                {
+                    title: "PERPLEXITY 활용 가이드",
+                    date: "2025. 6. 9.",
+                    category: "AI",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/zxGPqmv" }
+                },
+                {
+                    title: "GEMINI 모델 및 기능 활용 가이드",
+                    date: "2025. 6. 9.",
+                    category: "AI",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/jEPaqye" }
+                },
+                {
+                    title: "[YouTube 영상 요약] 트럼프의 실수, 놀랄 필요 없습니다",
+                    date: "2025. 6. 9.",
+                    category: "Investment, Politics",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/MYwEQax" }
+                },
+                {
+                    title: "이재명 정부 출범 - 기업의 대응 방향 (BKL 리포트) 요약",
+                    date: "2025. 6. 4.",
+                    category: "Law, Game Industry",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/WbvoRgW" }
+                },
+                {
+                    title: "부정선거 주장 종합 분석 대시보드",
+                    date: "2025. 5. 31.",
+                    category: "Politics",
+                    links: { kor: "https://codepen.io/Kipeum-Lee/full/MYwKBgj" }
+                }
+            ];
+
+            const sortedData = dashboardData.sort((a, b) => {
+                const parseDate = (dateString) => {
+                    const parts = dateString.trim().replace(/\.$/, '').split('. ');
+                    return new Date(parts[0], parts[1] - 1, parts[2]);
+                };
+                return parseDate(b.date) - parseDate(a.date);
+            });
+
+            const listContainer = document.getElementById('archive-list-container');
+            const filterContainer = document.getElementById('category-filter-container');
+            const modalContainer = document.getElementById('modal-container');
+            const modalTitle = document.getElementById('modal-title');
+            const modalButtons = document.getElementById('modal-buttons');
+            const modalCloseBtn = document.getElementById('modal-close-button');
+            const modalSubtitle = document.querySelector('.modal-subtitle');
+
+
+            function renderList(filterCategory = 'All') {
+                const containerHeight = listContainer.offsetHeight;
+                if(containerHeight > 0) { // Only set min-height if it has content
+                    listContainer.style.minHeight = `${containerHeight}px`;
+                }
+
+                listContainer.innerHTML = ''; 
+
+                const dataToRender = filterCategory === 'All'
+                    ? sortedData
+                    : sortedData.filter(item => item.category.includes(filterCategory));
+
+                if (dataToRender.length === 0) {
+                    listContainer.innerHTML = '<p style="text-align: center; opacity: 0.7;">해당 카테고리에 대한 항목이 없습니다.</p>';
+                } else {
+                    dataToRender.forEach(item => {
+                        const originalIndex = sortedData.findIndex(d => d.title === item.title && d.date === item.date);
+                        const listItem = document.createElement('div');
+                        listItem.className = 'archive-item';
+                        listItem.dataset.index = originalIndex;
+
+                        let linkButtonsHTML = '';
+                        const linkKeys = Object.keys(item.links);
+                        
+                        // For standard items, create KOR/ENG buttons
+                        if(item.type !== 'multi-link') {
+                            if (item.links.kor) {
+                                linkButtonsHTML += `<a class="lang-link-button">KOR</a>`;
+                            }
+                            if (item.links.eng) {
+                                linkButtonsHTML += `<a class="lang-link-button">ENG</a>`;
+                            }
+                        } else {
+                           // For the multi-link item, you can show a generic button or count
+                           linkButtonsHTML += `<a class="lang-link-button">View Options</a>`;
+                        }
+
+                        listItem.innerHTML = `
+                            <div class="item-content">
+                                <h2>${item.title}</h2>
+                                <div class="metadata">
+                                    <span class="date">${item.date}</span>
+                                    <span>·</span>
+                                    <span class="category-tag">${item.category}</span>
+                                </div>
+                            </div>
+                            <div class="lang-links">
+                                ${linkButtonsHTML}
+                            </div>
+                        `;
+                        listContainer.appendChild(listItem);
+                    });
+                }
+                
+                applyStaggeredAnimation();
+
+                const animationDuration = dataToRender.length > 0 ? dataToRender.length * 80 + 200 : 0;
+                setTimeout(() => {
+                    listContainer.style.minHeight = ''; 
+                }, animationDuration);
+            }
+
+            function handleItemClick(e) {
+                const itemElement = e.target.closest('.archive-item');
+                if (!itemElement) return;
+
+                const itemIndex = itemElement.dataset.index;
+                const itemData = sortedData[itemIndex];
+                const linkKeys = Object.keys(itemData.links);
+
+                // Open directly if only one link and not a multi-link type
+                if (linkKeys.length === 1 && itemData.type !== 'multi-link') {
+                    window.open(itemData.links[linkKeys[0]], '_blank');
+                } else {
+                    openLinkModal(itemData);
+                }
+            }
+            
+            // ★★★★★ MODIFIED Function to Handle Both Modal Types ★★★★★
+            function openLinkModal(itemData) {
+                modalTitle.textContent = itemData.title;
+                modalButtons.innerHTML = '';
+                
+                modalButtons.classList.remove('multi-link-list');
+
+                if (itemData.type === 'multi-link') {
+                    modalSubtitle.textContent = '아래 목록에서 대시보드를 선택하세요 / Select a dashboard below';
+                    modalSubtitle.style.display = 'block';
+                    modalButtons.classList.add('multi-link-list');
+
+                    Object.entries(itemData.links).forEach(([name, url]) => {
+                        const button = document.createElement('a');
+                        button.href = url;
+                        button.target = '_blank';
+                        button.className = 'modal-lang-button';
+                        button.textContent = name;
+                        modalButtons.appendChild(button);
+                    });
+                } else {
+                    modalSubtitle.textContent = '언어를 선택하세요 / Select Language';
+                    modalSubtitle.style.display = 'block';
+
+                    Object.entries(itemData.links).forEach(([lang, url]) => {
+                        const button = document.createElement('a');
+                        button.href = url;
+                        button.target = '_blank';
+                        button.className = 'modal-lang-button';
+                        
+                        if (lang.toLowerCase() === 'kor') button.textContent = '한국어 (Korean)';
+                        else if (lang.toLowerCase() === 'eng') button.textContent = '영어 (English)';
+                        else button.textContent = lang.charAt(0).toUpperCase() + lang.slice(1);
+                        
+                        modalButtons.appendChild(button);
+                    });
+                }
+                modalContainer.classList.add('active');
+            }
+
+
+            function closeLanguageModal() {
+                modalContainer.classList.remove('active');
+            }
+
+            function createCategoryFilters() {
+                const categories = new Set();
+                sortedData.forEach(item => {
+                    item.category.split(',').forEach(cat => categories.add(cat.trim()));
+                });
+
+                let uniqueCategories = [...categories];
+                
+                const customOrder = ['Law', 'Politics', 'Science', 'Investment', 'Game Industry', 'AI'];
+
+                let etcExists = false;
+                const etcIndex = uniqueCategories.indexOf('Etc.');
+                if (etcIndex > -1) {
+                    uniqueCategories.splice(etcIndex, 1);
+                    etcExists = true;
+                }
+                
+                uniqueCategories.sort((a, b) => {
+                    let indexA = customOrder.indexOf(a);
+                    let indexB = customOrder.indexOf(b);
+
+                    if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+                    if (indexA === -1) return 1;
+                    if (indexB === -1) return -1;
+                    return indexA - indexB;
+                });
+
+                if (etcExists) {
+                    uniqueCategories.push('Etc.');
+                }
+
+                const finalCategoryOrder = ['All', ...uniqueCategories];
+
+                filterContainer.innerHTML = finalCategoryOrder.map(cat => 
+                    `<button class="filter-button ${cat === 'All' ? 'active' : ''}" data-category="${cat}">${cat}</button>`
+                ).join('');
+
+                filterContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('filter-button')) {
+                        filterContainer.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                        renderList(e.target.dataset.category);
+                    }
+                });
+            }
+
+            function applyStaggeredAnimation() {
+                const items = document.querySelectorAll('.archive-item');
+                items.forEach((item, index) => {
+                    setTimeout(() => {
+                        item.classList.add('is-visible');
+                    }, 80 * index);
+                });
+            }
+
+            function init() {
+                if (!listContainer || !filterContainer) return;
+                
+                createCategoryFilters();
+                renderList();
+
+                listContainer.addEventListener('click', handleItemClick);
+                modalCloseBtn.addEventListener('click', closeLanguageModal);
+                modalContainer.addEventListener('click', (e) => {
+                    if (e.target === modalContainer) closeLanguageModal();
+                });
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && modalContainer.classList.contains('active')) {
+                        closeLanguageModal();
+                    }
+                });
+            }
+            
+            init();
+        });
+    </script>
+</body>
+</html>
